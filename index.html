@@ -374,7 +374,7 @@
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }); 
 
-      const [notesText, setNotesText] = useState('💙 เคลียร์ละค้าบ 💗ขอบคุณทุกคิวน้า 🐰');
+      const [notesText, setNotesText] = useState('');
       
       const [socialLinks, setSocialLinks] = useState({ fb: '', ig: '', link: '' });
       const [showSocialModal, setShowSocialModal] = useState(false);
@@ -415,7 +415,7 @@
               if (response.data.lockedNextDate) setSelectedNextDate(response.data.lockedNextDate);
               
               // โหลด Notes และ Social Links จากฐานข้อมูล
-              if (response.data.notesText) setNotesText(response.data.notesText);
+              if (response.data.notesText !== undefined) setNotesText(response.data.notesText);
               if (response.data.socialLinks) setSocialLinks(response.data.socialLinks);
             }
             setIsLoading(false);
