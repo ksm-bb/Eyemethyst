@@ -54,31 +54,38 @@
     // 🎨 📝 โน้ตสี: ตัวแปรหลักที่ใช้ควบคุมสีทั้งหมดในเว็บ
     // ==========================================
     const COLORS = {
-      blue: '#BCE2F4',      // สีของป้ายสถานะหรือพื้นหลังอ่อนๆ
-      pink: '#E2F1F8',      // สีหลักของกลีบดอกไม้ และพื้นหลังบางจุด
-      purple: '#FCF6DE',    // สีไฮไลท์จุดสว่าง
-      orange: '#fffae7',    // สีเกสรดอกไม้ และสีขอบ
-      bg: '#F5FAFD',        // สีพื้นหลังรวมของหน้าเว็บทั้งหมด
-      white: '#fffbf0',     // สีขาว (การ์ด, ตัวอักษรบนพื้นเข้ม)
-      textMain: '#75acd1', // สีตัวอักษรหลัก (Headings, ตัวเลขใหญ่ๆ)
-      textSoft: '#4B6580', // สีตัวอักษรรอง (Subtext)
-      pinkDeep: '#6CA9D6', // สีเน้น (ปุ่ม, จุดที่ต้องการให้เด่น)
-      blueDeep: '#2A5C82', // สีตัวอักษรบนป้ายสถานะที่ต้องการความคมชัด
-      purpleDeep: '#75acd1', // สีตัวเลขเปอร์เซ็นต์ % หรือป้าย Channel
-      orangeDeep: '#5898C4', // สีปุ่มกด, แถบสถานะ Channel
+      blue: '#BCE2F4',      
+      pink: '#E2F1F8',      
+      purple: '#FCF6DE',    
+      orange: '#fffae7',    
+      bg: '#F5FAFD',        
+      white: '#fffbf0',     
+      textMain: '#75acd1', 
+      textSoft: '#4B6580', 
+      pinkDeep: '#6CA9D6', 
+      blueDeep: '#2A5C82', 
+      purpleDeep: '#75acd1', 
+      orangeDeep: '#5898C4', 
+    };
+
+    // ✨ ฟังก์ชันจัดการรูปแบบลิงก์ให้ถูกต้อง (เติม https:// อัตโนมัติถ้าลืมพิมพ์)
+    const formatExternalUrl = (url) => {
+      if (!url) return '';
+      if (!/^https?:\/\//i.test(url)) return `https://${url}`;
+      return url;
     };
 
     const formatDriveLink = (url) => {
       if (!url) return '';
       const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (match && match[1]) {
-        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        return `https://drive.google.com/uc?id=${match[1]}&export=view`; 
       }
       return url; 
     };
 
     // ==========================================
-    // ✨ แยก COMPONENTS ออกมานอกฟังก์ชัน APP เพื่อแก้ปัญหาหน่วง
+    // ✨ แยก COMPONENTS
     // ==========================================
 
     const FluffyCloud = React.memo(({ top, left, right, bottom, scale = 1, opacity = 0.7, delay = '0s', reverse = false }) => (
@@ -113,7 +120,7 @@
           <div className="flex flex-col justify-center ml-2 relative z-10">
             <div className="flex items-center gap-1">
               <h1 className="text-2xl font-black italic tracking-tighter flex">
-                {"Eyemethyst".split('').map((char, index) => (
+                {"BABYBLUE".split('').map((char, index) => (
                   <span key={index} className="bg-gradient-to-br from-[#99C3E4] to-[#C1E4F3] bg-clip-text text-transparent drop-shadow-sm inline-block animate-text-wave" style={{ animationDelay: `${index * 0.1}s` }}>{char}</span>
                 ))}
               </h1>
@@ -383,7 +390,7 @@
       // ==========================================
       // 🌟 ตั้งค่าเชื่อมต่อ API (GitHub -> Google Sheets)
       // ==========================================
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx94jmtBBUafNaLLRDkIuJbQjWj33F1ePRvY96o8NU4sndQ5-47-LpaCXdTBA6FmtHh/exec";
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6HimJARjmHdfx2StgZW0pxvIvVPPWsisu5xQJgc9Ik20wsDYFvMc2nZAKYswHy8Ol/exec";
 
       const fetchAPI = async (payload) => {
         try {
@@ -414,9 +421,16 @@
               if (response.data.bannerVisible !== undefined) setIsBannerVisible(response.data.bannerVisible);
               if (response.data.lockedNextDate) setSelectedNextDate(response.data.lockedNextDate);
               
-              // โหลด Notes และ Social Links จากฐานข้อมูล
-              if (response.data.notesText !== undefined) setNotesText(response.data.notesText);
-              if (response.data.socialLinks) setSocialLinks(response.data.socialLinks);
+              // ✨ โหลด Notes มาเก็บไว้ (ป้องกันค่า undefined)
+              if (response.data.notesText !== undefined) {
+                 setNotesText(response.data.notesText);
+              }
+              
+              // ✨ โหลด Social Links อย่างรัดกุม 
+              if (response.data.socialLinks) {
+                 const linksData = typeof response.data.socialLinks === 'string' ? JSON.parse(response.data.socialLinks) : response.data.socialLinks;
+                 setSocialLinks({ fb: linksData.fb || '', ig: linksData.ig || '', link: linksData.link || '' });
+              }
             }
             setIsLoading(false);
           })
@@ -641,9 +655,10 @@
                               type="text" 
                               value={notesText} 
                               onChange={(e) => setNotesText(e.target.value)} 
-                              onBlur={(e) => fetchAPI({ action: 'saveNotes', notesText: e.target.value })} // ✨ ระบบ Auto-save เมื่อพิมพ์เสร็จแล้วกดที่อื่น
+                              onBlur={(e) => fetchAPI({ action: 'saveNotes', notesText: e.target.value })} 
+                              onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }} // ✨ เพิ่มให้กด Enter แล้วเซฟทันที
                               className="w-full bg-transparent outline-none text-[11px] font-bold text-[#6CA9D6]" 
-                              placeholder="พิมพ์โน้ตของคุณที่นี่..."
+                              placeholder="พิมพ์โน้ตของคุณที่นี่... (กด Enter เพื่อเซฟ)"
                             />
                           ) : (
                             <span className="text-[11px] font-bold text-[#6CA9D6] truncate w-full">{notesText}</span>
@@ -656,13 +671,13 @@
                               <IconEdit size={12} />
                             </button>
                           )}
-                          <a href={socialLinks.fb || "#"} target={socialLinks.fb ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#9BCBE8] hover:scale-105 active:scale-95 transition-transform">
+                          <a href={socialLinks.fb ? formatExternalUrl(socialLinks.fb) : "#"} target={socialLinks.fb ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#9BCBE8] hover:scale-105 active:scale-95 transition-transform">
                             <IconFacebook size={20} />
                           </a>
-                          <a href={socialLinks.ig || "#"} target={socialLinks.ig ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#D4B856] hover:scale-105 active:scale-95 transition-transform">
+                          <a href={socialLinks.ig ? formatExternalUrl(socialLinks.ig) : "#"} target={socialLinks.ig ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#D4B856] hover:scale-105 active:scale-95 transition-transform">
                             <IconInstagram size={20} />
                           </a>
-                          <a href={socialLinks.link || "#"} target={socialLinks.link ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#B0BEC5] hover:scale-105 active:scale-95 transition-transform">
+                          <a href={socialLinks.link ? formatExternalUrl(socialLinks.link) : "#"} target={socialLinks.link ? "_blank" : "_self"} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-[14px] flex items-center justify-center shadow-sm border border-white text-[#B0BEC5] hover:scale-105 active:scale-95 transition-transform">
                             <IconLink size={20} />
                           </a>
                        </div>
@@ -816,15 +831,15 @@
                    <div className="space-y-3">
                      <div className="relative">
                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9BCBE8]"><IconFacebook size={16}/></div>
-                       <input type="url" value={tempSocialLinks.fb} onChange={(e) => setTempSocialLinks({...tempSocialLinks, fb: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์ Facebook..." />
+                       <input type="text" value={tempSocialLinks.fb} onChange={(e) => setTempSocialLinks({...tempSocialLinks, fb: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์ Facebook..." />
                      </div>
                      <div className="relative">
                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4B856]"><IconInstagram size={16}/></div>
-                       <input type="url" value={tempSocialLinks.ig} onChange={(e) => setTempSocialLinks({...tempSocialLinks, ig: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์ Instagram..." />
+                       <input type="text" value={tempSocialLinks.ig} onChange={(e) => setTempSocialLinks({...tempSocialLinks, ig: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์ Instagram..." />
                      </div>
                      <div className="relative">
                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#B0BEC5]"><IconLink size={16}/></div>
-                       <input type="url" value={tempSocialLinks.link} onChange={(e) => setTempSocialLinks({...tempSocialLinks, link: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์อื่นๆ..." />
+                       <input type="text" value={tempSocialLinks.link} onChange={(e) => setTempSocialLinks({...tempSocialLinks, link: e.target.value})} className="w-full p-3.5 pl-9 rounded-2xl bg-white border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#BCE2F4] transition-all" placeholder="ลิงก์อื่นๆ..." />
                      </div>
                      
                      <button type="submit" className="w-full py-3.5 rounded-2xl font-black text-xs mt-4 text-white shadow-lg active:scale-95 transition-all" style={{ backgroundColor: COLORS.pinkDeep }}>บันทึกลิงก์</button>
